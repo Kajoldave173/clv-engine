@@ -1,0 +1,58 @@
+# Data files
+data/raw/*.xlsx
+data/raw/*.csv
+data/interim/
+data/processed/
+data/predictions/
+
+# Model artifacts
+models/*.pkl
+models/*.json
+
+# DVC
+/data/raw/*.dvc
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Reports (auto-generated)
+reports/figures/*.png
+reports/figures/*.html
+reports/monitoring_*.txt
+
+# MLflow local
+mlruns/
+
+# Phase 1 delivery archives
+*.tar.gz
+clv-engine-phase1/
+clv-validate/

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clv-engine"
+version = "0.1.0"
+description = "Customer Lifetime Value prediction and segmentation engine"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+[project.scripts]
+clv = "src.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["src*"]

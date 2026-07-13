@@ -1,0 +1,83 @@
+stages:
+  data:
+    cmd: python -m src.cli data --config configs/params.yaml
+    deps:
+      - src/data/ingest.py
+      - src/data/clean.py
+      - configs/params.yaml
+    outs:
+      - data/interim/transactions_clean.csv
+      - data/interim/transactions_calibration.csv
+      - data/interim/transactions_holdout.csv
+
+  validate:
+    cmd: python -m src.cli validate --config configs/params.yaml
+    deps:
+      - src/data/validate.py
+      - data/interim/transactions_clean.csv
+
+  features:
+    cmd: python -m src.cli features --config configs/params.yaml
+    deps:
+      - src/features/rfm.py
+      - src/features/behavioral.py
+      - src/features/build_features.py
+      - data/interim/transactions_calibration.csv
+    outs:
+      - data/processed/features_calibration.csv
+
+  train:
+    cmd: python -m src.cli train --config configs/params.yaml
+    deps:
+      - src/models/probabilistic.py
+      - src/models/clv_xgboost.py
+      - src/models/churn_classifier.py
+      - src/models/train.py
+      - data/processed/features_calibration.csv
+    outs:
+      - models/bgnbd_model.pkl
+      - models/gg_model.pkl
+      - models/xgb_clv_model.json
+      - models/xgb_churn_model.json
+    metrics:
+      - reports/metrics.json:
+          cache: false
+
+  segment:
+    cmd: python -m src.cli segment --config configs/params.yaml
+    deps:
+      - src/segmentation/cluster.py
+      - src/segmentation/profiler.py
+      - data/processed/features_calibration.csv
+    outs:
+      - models/kmeans_model.pkl
+      - data/processed/customer_segments.csv
+
+  evaluate:
+    cmd: python -m src.cli evaluate --config configs/params.yaml
+    deps:
+      - src/evaluation/metrics.py
+      - src/evaluation/shap_analysis.py
+      - models/xgb_clv_model.json
+      - data/processed/features_calibration.csv
+    outs:
+      - reports/figures/
+    plots:
+      - reports/metrics.json
+
+  score:
+    cmd: python -m src.cli score --input data/interim/transactions_calibration.csv
+    deps:
+      - src/scoring/batch_scorer.py
+      - src/scoring/monitoring.py
+      - data/interim/transactions_calibration.csv
+      - models/bgnbd_model.pkl
+      - models/gg_model.pkl
+      - models/xgb_clv_model.json
+      - models/churn_model.json
+      - models/scaler.pkl
+      - models/kmeans_model.pkl
+      - models/cluster_scaler.pkl
+    outs:
+      - data/predictions:
+          persist: true

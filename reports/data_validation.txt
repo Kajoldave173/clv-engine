@@ -1,0 +1,50 @@
+============================================================
+DATA VALIDATION REPORT
+Run at: 2026-07-09 02:25:40
+============================================================
+
+--- Null Checks ---
+  PASS  | No nulls in 'customer_id' (found 0)
+  PASS  | No nulls in 'invoice_date' (found 0)
+  PASS  | No nulls in 'quantity' (found 0)
+  PASS  | No nulls in 'price' (found 0)
+
+--- Value Range Checks ---
+  PASS  | All quantity > 0 (found 0 violations)
+  PASS  | All price > 0 (found 0 violations)
+  PASS  | All total_amount > 0 (found 0 violations)
+
+--- Date Range Checks ---
+  PASS  | Dates start after 2009-12-01 (actual: 2009-12-01)
+  PASS  | Dates end before 2011-12-10 (actual: 2011-12-09)
+
+--- Customer Count Checks ---
+  PASS  | Customer count in range 4000-6000 (actual: 5861)
+
+--- Revenue Checks ---
+  PASS  | Total revenue in sane range 5M-25M (actual: 17,072,229)
+
+--- Duplicate Checks ---
+  PASS  | No remaining duplicates on key columns (found 0)
+
+--- Dtype Checks ---
+  PASS  | invoice_date is datetime (actual: datetime64[ns])
+  PASS  | quantity is numeric (actual: int64)
+  PASS  | price is numeric (actual: float64)
+
+--- Split Checks ---
+  PASS  | Calibration ends before 2011-06-30 (actual: 2011-06-29)
+  PASS  | Holdout starts on/after 2011-07-01 (actual: 2011-07-01)
+  PASS  | Calibration has enough customers (actual: 5023)
+  PASS  | Holdout has enough customers (actual: 3358)
+
+--- Baseline Stats ---
+  Saved baseline stats to baseline_stats.csv
+  quantity: mean=13.52, std=146.09, median=6.00
+  price: mean=2.94, std=4.42, median=1.95
+  total_amount: mean=21.98, std=225.93, median=12.45
+
+============================================================
+RESULTS: 19 passed, 0 warnings, 0 failed
+STATUS: PASSED
+============================================================

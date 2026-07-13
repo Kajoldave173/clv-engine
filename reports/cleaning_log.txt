@@ -1,0 +1,10 @@
+Data Cleaning Log
+==================================================
+
+• Dropped 243,007 rows with missing customer_id (22.8%)
+• Dropped 18,744 cancellation rows (invoice starts with 'C')
+• Dropped 0 rows with quantity <= 0
+• Dropped 2,878 non-product stock code rows
+• Dropped 63 rows with price <= 0
+• Dropped 26,061 exact duplicate rows
+• Dropped 0 rows outside date range 2009-12-01 to 2011-12-10

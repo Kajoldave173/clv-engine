@@ -1,0 +1,54 @@
+data:
+  raw_path: data/raw/online_retail_II.xlsx
+  calibration_end: "2011-06-30"       # First ~18 months for training
+  holdout_start: "2011-07-01"         # Last ~6 months for validation
+  holdout_end: "2011-12-09"
+  min_transactions: 2                 # Minimum purchases to include a customer
+
+features:
+  rfm_monetary: "total_revenue"       # or "avg_order_value"
+  rolling_windows: [30, 60, 90]       # Days for rolling aggregations
+  category_breadth: true
+  day_of_week_patterns: true
+  return_rate: true
+  basket_size_trend: true
+
+models:
+  probabilistic:
+    penalizer_coef: 0.001             # L2 penalty for BG/NBD
+    prediction_horizon_months: 6      # How far ahead to predict CLV
+
+  xgboost_clv:
+    n_estimators: 500
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    early_stopping_rounds: 50
+    eval_metric: "rmse"
+
+  churn_classifier:
+    model_type: "xgboost"             # or "lightgbm"
+    n_estimators: 300
+    max_depth: 4
+    scale_pos_weight: "auto"          # Handles class imbalance
+
+segmentation:
+  method: "kmeans"                    # or "gmm"
+  n_clusters: 5
+  features_used:
+    - "frequency"
+    - "recency"
+    - "monetary_value"
+    - "purchase_regularity"
+    - "category_breadth"
+    - "avg_basket_size"
+    - "return_rate"
+
+evaluation:
+  shap_sample_size: 500               # Number of customers for SHAP computation
+  top_n_features: 15                  # For summary plots
+
+mlflow:
+  tracking_uri: "https://dagshub.com/<username>/clv-engine.mlflow"
+  experiment_name: "clv-prediction"
