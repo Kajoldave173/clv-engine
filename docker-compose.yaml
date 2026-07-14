@@ -1,0 +1,49 @@
+# =============================================================================
+# CLV Engine — Docker Compose
+# =============================================================================
+# Usage:
+#   docker compose run pipeline train          # Train all models
+#   docker compose run pipeline tune           # Optuna hyperparameter tuning
+#   docker compose run pipeline score          # Batch score customers
+#   docker compose up app                      # Launch Streamlit dashboard
+#   docker compose up app -d                   # Launch in background
+# =============================================================================
+
+services:
+  # ── Pipeline container ──────────────────────────────────────────
+  # Runs any CLI command. Mounts data and models as volumes so
+  # artifacts persist on the host and are available to the app.
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./reports:/app/reports
+      - ./configs:/app/configs
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  # ── Streamlit app container ─────────────────────────────────────
+  # Serves the dashboard. In development, mounts the same volumes
+  # as the pipeline so it picks up freshly trained models.
+  # For production/HuggingFace, use Dockerfile.app which bundles
+  # artifacts directly into the image.
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./app:/app/app
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

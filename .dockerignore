@@ -1,0 +1,44 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Raw data (large xlsx — not needed in container)
+data/raw/
+
+# Local MLflow runs
+mlruns/
+
+# Secrets
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Notebooks (exploration only, not production)
+notebooks/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# DVC internals
+.dvc/cache/
+.dvc/tmp/
+
+# Archives
+*.tar.gz
+*.zip
