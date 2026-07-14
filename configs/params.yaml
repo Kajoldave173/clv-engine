@@ -1,22 +1,33 @@
+# =============================================================================
+# CLV Engine — Pipeline Configuration
+# =============================================================================
+# Single source of truth for all parameters. Nothing is hardcoded in scripts.
+# Referenced by every pipeline step via: config = load_config("configs/params.yaml")
+# =============================================================================
+
+# ── Data paths and temporal split ───────────────────────────────────────────
 data:
-  raw_path: data/raw/online_retail_II.xlsx
+  raw_path: "data/raw/online_retail_II.xlsx"
   calibration_end: "2011-06-30"       # First ~18 months for training
   holdout_start: "2011-07-01"         # Last ~6 months for validation
   holdout_end: "2011-12-09"
   min_transactions: 2                 # Minimum purchases to include a customer
 
+# ── Feature engineering ─────────────────────────────────────────────────────
 features:
-  rfm_monetary: "total_revenue"       # or "avg_order_value"
+  rfm_monetary: "total_revenue"       # Monetary value definition
   rolling_windows: [30, 60, 90]       # Days for rolling aggregations
   category_breadth: true
   day_of_week_patterns: true
   return_rate: true
   basket_size_trend: true
 
+# ── Models ──────────────────────────────────────────────────────────────────
 models:
   probabilistic:
     penalizer_coef: 0.001             # L2 penalty for BG/NBD
     prediction_horizon_months: 6      # How far ahead to predict CLV
+    discount_rate: 0.1                # Annual discount rate for CLV present value
 
   xgboost_clv:
     n_estimators: 500
@@ -26,29 +37,114 @@ models:
     colsample_bytree: 0.8
     early_stopping_rounds: 50
     eval_metric: "rmse"
+    random_state: 42
 
   churn_classifier:
-    model_type: "xgboost"             # or "lightgbm"
+    model_type: "xgboost"             # "xgboost" or "lightgbm"
     n_estimators: 300
     max_depth: 4
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
     scale_pos_weight: "auto"          # Handles class imbalance
+    early_stopping_rounds: 50
+    random_state: 42
 
+  lightgbm_clv:
+    n_estimators: 500
+    num_leaves: 31
+    learning_rate: 0.05
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    min_child_samples: 20
+    metric: "rmse"
+    random_state: 42
+    verbosity: -1
+
+  lightgbm_churn:
+    n_estimators: 300
+    num_leaves: 31
+    learning_rate: 0.05
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    min_child_samples: 20
+    scale_pos_weight: "auto"
+    metric: "binary_logloss"
+    random_state: 42
+    verbosity: -1
+
+# ── Segmentation ────────────────────────────────────────────────────────────
 segmentation:
-  method: "kmeans"                    # or "gmm"
+  method: "kmeans"                    # "kmeans" or "gmm"
   n_clusters: 5
+  random_state: 42
   features_used:
     - "frequency"
     - "recency"
     - "monetary_value"
-    - "purchase_regularity"
+    - "inter_purchase_time_mean"
+    - "purchase_velocity_recent_vs_early"
     - "category_breadth"
     - "avg_basket_size"
     - "return_rate"
 
+# ── Evaluation ──────────────────────────────────────────────────────────────
 evaluation:
   shap_sample_size: 500               # Number of customers for SHAP computation
   top_n_features: 15                  # For summary plots
 
+# ── MLflow + DagsHub ────────────────────────────────────────────────────────
 mlflow:
-  tracking_uri: "https://dagshub.com/<username>/clv-engine.mlflow"
+  tracking_uri: "https://dagshub.com/kajoldave8/clv-engine.mlflow"
   experiment_name: "clv-prediction"
+
+# ── Optuna hyperparameter tuning ────────────────────────────────────────────
+optuna:
+  n_trials: 50                        # Trials per model variant
+  cv_folds: 5                         # Cross-validation folds
+  timeout: 1800                       # Max seconds per search (30 min)
+  direction: "minimize"               # For CLV (RMSE); churn uses "maximize" (AUC)
+  random_state: 42
+
+  # Search spaces — each key maps to an Optuna suggest call
+  xgboost_clv_space:
+    n_estimators: [100, 1000]         # int range
+    max_depth: [3, 10]
+    learning_rate: [0.01, 0.3]        # log-uniform
+    subsample: [0.6, 1.0]
+    colsample_bytree: [0.5, 1.0]
+    min_child_weight: [1, 10]
+    reg_alpha: [0.00000001, 10.0]     # log-uniform
+    reg_lambda: [0.00000001, 10.0]    # log-uniform
+
+  xgboost_churn_space:
+    n_estimators: [100, 800]
+    max_depth: [3, 8]
+    learning_rate: [0.01, 0.3]
+    subsample: [0.6, 1.0]
+    colsample_bytree: [0.5, 1.0]
+    min_child_weight: [1, 10]
+    reg_alpha: [0.00000001, 10.0]
+    reg_lambda: [0.00000001, 10.0]
+
+  lightgbm_clv_space:
+    n_estimators: [100, 1000]
+    num_leaves: [15, 63]
+    learning_rate: [0.01, 0.3]
+    feature_fraction: [0.5, 1.0]
+    bagging_fraction: [0.5, 1.0]
+    min_child_samples: [5, 50]
+    reg_alpha: [0.00000001, 10.0]
+    reg_lambda: [0.00000001, 10.0]
+
+  lightgbm_churn_space:
+    n_estimators: [100, 800]
+    num_leaves: [15, 63]
+    learning_rate: [0.01, 0.3]
+    feature_fraction: [0.5, 1.0]
+    bagging_fraction: [0.5, 1.0]
+    min_child_samples: [5, 50]
+    reg_alpha: [0.00000001, 10.0]
+    reg_lambda: [0.00000001, 10.0]

@@ -181,7 +181,7 @@ def build_behavioral_features(config: dict[str, Any]) -> pd.DataFrame:
         return pd.Series(result)
 
     print("  Computing sequential features (this may take a moment)...")
-    seq = invoices.groupby("customer_id").apply(compute_sequences)
+    seq = invoices.groupby("customer_id").apply(compute_sequences, include_groups=False)
 
     # =================================================================
     # Step 6: Combine all features

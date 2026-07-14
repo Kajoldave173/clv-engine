@@ -134,6 +134,20 @@ def score(
     console.print(f"  Scored {len(scored):,} customers")
     console.print("[bold green]✓[/] Batch scoring complete")
 
+@app.command()
+def tune(
+    config: Path = typer.Option("configs/params.yaml", help="Path to params.yaml"),
+) -> None:
+    """Run Optuna hyperparameter tuning for all model variants."""
+    cfg = load_config(config)
+    console.print("[bold blue]Phase 5.5:[/] Hyperparameter tuning")
 
+    from src.experiment.tuning import run_all_tuning
+
+    results = run_all_tuning(cfg)
+    console.print(f"\n  Best CLV model:   {results['best_clv_type']}")
+    console.print(f"  Best churn model: {results['best_churn_type']}")
+    console.print("[bold green]✓[/] Tuning complete — check DagsHub for all runs")
+    
 if __name__ == "__main__":
     app()
