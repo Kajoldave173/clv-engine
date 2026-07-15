@@ -7,7 +7,8 @@
 **Date:** July 2026
 **Author:** Kajol Dave
 **Repository:** [github.com/Kajoldave173/clv-engine](https://github.com/Kajoldave173/clv-engine)
-**Experiment Tracking:** DagsHub MLflow (run: `best-models-final`)
+**Live App:** [clv-engine-kajol-dave-project.streamlit.app](https://clv-engine-kajol-dave-project.streamlit.app/)
+**Experiment Tracking:** [DagsHub MLflow](https://dagshub.com/kajoldave8/clv-engine.mlflow) (run: `best-models-final`)
 
 ### Architecture
 
@@ -82,7 +83,11 @@ The system uses a two-model approach combining probabilistic and machine learnin
 
 ## Features
 
-The ML models use 16 behavioral features engineered from calibration-period transactions, plus 2 probabilistic model outputs:
+The ML models use 16 behavioral features engineered from calibration-period transactions, plus 2 probabilistic model outputs (23 total with RFM inputs):
+
+**RFM inputs:** frequency, recency, T, monetary_value
+
+**Probabilistic stacking inputs:** predicted_purchases (BG/NBD), p_alive, expected_avg_value (Gamma-Gamma)
 
 **Temporal purchase patterns:** inter_purchase_time_mean, inter_purchase_time_std, inter_purchase_time_trend, days_since_last_purchase, purchase_velocity_recent_vs_early
 
@@ -90,11 +95,7 @@ The ML models use 16 behavioral features engineered from calibration-period tran
 
 **Monetary trends:** monetary_trend, max_single_transaction, monetary_cv
 
-**Engagement trajectory:** lifecycle_stage (recency-to-tenure ratio), weekend_purchase_ratio
-
-**Return behavior:** return_rate
-
-**Probabilistic stacking inputs:** predicted_purchases (BG/NBD), expected_avg_value (Gamma-Gamma)
+**Engagement trajectory:** lifecycle_stage, weekend_purchase_ratio
 
 ---
 
@@ -119,11 +120,11 @@ The Optuna-tuned XGBoost reduces MAE by **50.3%** compared to the probabilistic 
 | F1 | 0.396 | **0.783** |
 | AUC Improvement | — | **89.1%** |
 
-The BG/NBD P(alive) performs near-random on this dataset (AUC 0.452) because it's overoptimistic — mean P(alive) of 0.904 for a population with 48.2% actual churn. The ML classifier captures behavioral signals (purchase velocity decline, return behavior, category concentration) that the probabilistic model cannot.
+The BG/NBD P(alive) performs near-random on this dataset (AUC 0.452) because it is overoptimistic — mean P(alive) of 0.904 for a population with 48.2% actual churn. The ML classifier captures behavioral signals (purchase velocity decline, return behavior, category concentration) that the probabilistic model cannot.
 
 ### Model Selection
 
-Both XGBoost and LightGBM were evaluated via Optuna hyperparameter tuning. XGBoost was selected as the best model for both CLV and churn tasks based on cross-validated performance. Full experiment history is available on the DagsHub MLflow UI.
+Both XGBoost and LightGBM were evaluated via Optuna hyperparameter tuning. XGBoost was selected as the best model for both CLV and churn tasks based on cross-validated performance. Full experiment history is available on the [DagsHub MLflow UI](https://dagshub.com/kajoldave8/clv-engine.mlflow).
 
 ---
 
@@ -199,9 +200,12 @@ make all                          # Runs: data → validate → features → tra
 docker compose run pipeline data
 docker compose run pipeline train
 docker compose run pipeline score
+
+# DVC
+dvc repro
 ```
 
-All artifacts are versioned with DVC. Experiment history is logged to DagsHub MLflow. The pipeline is defined in `dvc.yaml` and can be reproduced with `dvc repro`.
+All artifacts are versioned with DVC. Experiment history is logged to [DagsHub MLflow](https://dagshub.com/kajoldave8/clv-engine.mlflow). The pipeline is defined in `dvc.yaml` and can be reproduced with `dvc repro`.
 
 **Tests:** 94 pytest tests cover data validation, feature computation, and scoring pipeline integrity.
 
